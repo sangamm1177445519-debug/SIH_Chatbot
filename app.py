@@ -133,9 +133,9 @@ if prompt_to_process:
                     genai.configure(api_key=api_key)
                     system_instruction = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
-                    # Using gemini-2.5-flash model
+                    # Updated model name matching the latest recommended version
                     model = genai.GenerativeModel(
-                        model_name="gemini-2.5-flash",
+                        model_name="gemini-3.6-flash",
                         system_instruction=system_instruction
                     )
                     
