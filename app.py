@@ -132,15 +132,10 @@ if prompt_to_process:
                     genai.configure(api_key=api_key)
                     prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant for SIH. Answer this query professionally focusing on {market} and {mode}: {prompt_to_process}"
                     
-                    # Try primary model, fallback if it fails
-                    try:
-                        model = genai.GenerativeModel("gemini-1.5-flash")
-                        response = model.generate_content(prompt_full)
-                        answer_text = response.text
-                    except Exception:
-                        model = genai.GenerativeModel("gemini-pro")
-                        response = model.generate_content(prompt_full)
-                        answer_text = response.text
+                    # Using the standard updated model name for current SDK versions
+                    model = genai.GenerativeModel("models/gemini-1.5-flash")
+                    response = model.generate_content(prompt_full)
+                    answer_text = response.text
                         
                 except Exception as e:
                     answer_text = f"Error using API Key: {e}"
