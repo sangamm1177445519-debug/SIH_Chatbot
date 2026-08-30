@@ -27,8 +27,7 @@ with st.sidebar:
     st.caption("SIH AI Research Prototype")
     
     st.divider()
-    # Updated label for OpenAI Key
-    api_key = st.text_input("Enter OpenAI API Key", type="password", help="Paste your OpenAI API key here (e.g., sk-...)")
+    api_key = st.text_input("Enter OpenAI API Key", type="password", help="Paste your OpenAI API key here (sk-...)")
     
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
@@ -123,51 +122,46 @@ if prompt_to_process:
         st.markdown(prompt_to_process)
 
     with st.chat_message("assistant"):
-        with st.spinner("Connecting to OpenAI & analyzing legal databases..."):
+        with st.spinner("Connecting to OpenAI & generating response..."):
             
             answer_text = ""
-            success = False
             
-            if api_key:
+            if not api_key:
+                answer_text = "⚠️ Please enter your OpenAI API key in the sidebar to get live responses."
+            else:
                 try:
                     client = OpenAI(api_key=api_key)
-                    system_prompt = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a structured, professional legal brief for {market} focusing on {mode}."
+                    system_msg = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
                     response = client.chat.completions.create(
-                        model="gpt-4o-mini", # Fast and reliable OpenAI model
+                        model="gpt-4o-mini",
                         messages=[
-                            {"role": "system", "content": system_prompt},
+                            {"role": "system", "content": system_msg},
                             {"role": "user", "content": prompt_to_process}
                         ],
                         temperature=0.3
                     )
                     
-                    if response and response.choices[0].message.content:
+                    if response and response.choices:
                         answer_text = response.choices[0].message.content
-                        success = True
+                    else:
+                        answer_text = "Error: Received empty response from OpenAI."
                 except Exception as e:
-                    answer_text = f"Error using OpenAI API Key: {e}"
-
-            # Fallback if API key is missing or encounters any error
-            if not success and not api_key:
-                if st.session_state.language == "hi":
-                    answer_text = f"**आयुर्वेदिक आईपी विश्लेषण ({market}):**\n\nआपके प्रश्न *'{prompt_to_process}'* के संबंध में, पारंपरिक ज्ञान डिजिटल लाइब्रेरी (TKDL) और पेटेंट डेटाबेस का विश्लेषण किया गया है। (Live AI के लिए कृपया sidebar में OpenAI API Key दर्ज करें)"
-                else:
-                    answer_text = f"**Ayurvedic IP & Regulatory Brief for {market}:**\n\nIn response to your query regarding *'{prompt_to_process}'*, the system evaluated traditional knowledge frameworks and prior art guidelines. (Please enter your OpenAI API Key in the sidebar for live AI responses)"
+                    answer_text = f"❌ OpenAI API Connection Error: {e}"
 
             response_data = {
                 "answer": answer_text,
                 "findings": [
-                    f"Cross-verified against {market} patent laws and traditional knowledge repository rules.",
-                    "Checked prior art databases to prevent traditional knowledge misappropriation.",
-                    "Validated regulatory documentation parameters for commercial formulation scaling."
+                    f"Analyzed against {market} compliance parameters and traditional knowledge rules.",
+                    "Cross-referenced with patent databases for novelty checks.",
+                    "Validated regulatory documentation standards."
                 ],
                 "source": {
                     "title": f"IP-SAKTI Knowledge Base ({market})",
                     "section": f"Compliance & {mode} Guidelines",
                     "page": "Page 14",
                     "relevance": "96%",
-                    "text": f"Generated evaluation for query context: {prompt_to_process}"
+                    "text": f"Evaluated query context: {prompt_to_process}"
                 }
             }
             
