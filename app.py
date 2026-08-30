@@ -137,7 +137,7 @@ if prompt_to_process:
                     system_msg = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
                     response = client.chat.completions.create(
-                        model="meta-llama/llama-3.1-8b-instruct:free",
+                        model="deepseek/deepseek-r1:free",
                         messages=[
                             {"role": "system", "content": system_msg},
                             {"role": "user", "content": prompt_to_process}
