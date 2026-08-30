@@ -134,7 +134,7 @@ if prompt_to_process:
                     system_msg = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-1.5-flash',
                         contents=f"{system_msg}\n\nUser Query: {prompt_to_process}"
                     )
                     
