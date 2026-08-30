@@ -1,8 +1,8 @@
 import streamlit as st
-from google import genai
+from openai import OpenAI
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="IP-SAKTI Sahayak (Gemini)", page_icon="🌿", layout="wide")
+st.set_page_config(page_title="IP-SAKTI Sahayak (OpenRouter)", page_icon="🌿", layout="wide")
 
 # --- CUSTOM CSS ---
 st.markdown("""
@@ -24,10 +24,10 @@ if "language" not in st.session_state:
 # --- SIDEBAR API CONFIG & CONTROLS ---
 with st.sidebar:
     st.title("🌿 IP-SAKTI Sahayak")
-    st.caption("Powered by Google Gemini")
+    st.caption("Powered by OpenRouter")
     
     st.divider()
-    api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Paste your Gemini API key here")
+    api_key = st.text_input("Enter OpenRouter API Key", type="password", help="Paste your OpenRouter API key (sk-or-...)")
     
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
@@ -122,28 +122,35 @@ if prompt_to_process:
         st.markdown(prompt_to_process)
 
     with st.chat_message("assistant"):
-        with st.spinner("Connecting to Gemini & generating response..."):
+        with st.spinner("Connecting to OpenRouter & generating live response..."):
             
             answer_text = ""
             
             if not api_key:
-                answer_text = "⚠️ Please enter your Google Gemini API key in the sidebar to get live responses."
+                answer_text = "⚠️ Please enter your OpenRouter API key in the sidebar to get live responses."
             else:
                 try:
-                    client = genai.Client(api_key=api_key)
+                    client = OpenAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=api_key,
+                    )
                     system_msg = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
-                    response = client.models.generate_content(
-                        model='gemini-1.5-flash',
-                        contents=f"{system_msg}\n\nUser Query: {prompt_to_process}"
+                    response = client.chat.completions.create(
+                        model="meta-llama/llama-3-8b-instruct:free",
+                        messages=[
+                            {"role": "system", "content": system_msg},
+                            {"role": "user", "content": prompt_to_process}
+                        ],
+                        temperature=0.3
                     )
                     
-                    if response and response.text:
-                        answer_text = response.text
+                    if response and response.choices:
+                        answer_text = response.choices[0].message.content
                     else:
-                        answer_text = "Error: Received empty response from Gemini."
+                        answer_text = "Error: Received empty response from OpenRouter."
                 except Exception as e:
-                    answer_text = f"❌ Gemini API Connection Error: {e}"
+                    answer_text = f"❌ OpenRouter API Connection Error: {e}"
 
             response_data = {
                 "answer": answer_text,
