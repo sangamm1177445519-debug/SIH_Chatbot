@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 import google.generativeai as genai
 
 # --- PAGE CONFIGURATION ---
@@ -132,10 +131,20 @@ if prompt_to_process:
                     genai.configure(api_key=api_key)
                     prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant for SIH. Answer this query professionally focusing on {market} and {mode}: {prompt_to_process}"
                     
-                    # Using the standard updated model name for current SDK versions
-                    model = genai.GenerativeModel("models/gemini-1.5-flash")
-                    response = model.generate_content(prompt_full)
-                    answer_text = response.text
+                    # Safe fallback mechanism to test standard model names
+                    success = False
+                    for model_name in ["gemini-1.5-flash", "gemini-pro"]:
+                        try:
+                            model = genai.GenerativeModel(model_name)
+                            response = model.generate_content(prompt_full)
+                            answer_text = response.text
+                            success = True
+                            break
+                        except Exception:
+                            continue
+                    
+                    if not success:
+                        answer_text = "Error: Could not connect to available Gemini models. Please check your API key."
                         
                 except Exception as e:
                     answer_text = f"Error using API Key: {e}"
