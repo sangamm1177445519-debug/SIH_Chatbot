@@ -5,12 +5,6 @@ import google.generativeai as genai
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="IP-SAKTI Sahayak", page_icon="🌿", layout="wide")
 
-# --- HARDCODED API KEY ---
-API_KEY = "AQ.Ab8RN6LoVvkX800k2aPZ2JbINFH-vVUcYh4fvCmYJV-kjZKWFQ"
-
-if API_KEY:
-    genai.configure(api_key=API_KEY)
-
 # --- CUSTOM CSS FOR PREMIUM LOOK ---
 st.markdown("""
 <style>
@@ -28,12 +22,16 @@ if "messages" not in st.session_state:
 if "language" not in st.session_state:
     st.session_state.language = "en"
 
-# --- SIDEBAR CONTROLS ---
+# --- SIDEBAR API CONFIG & CONTROLS ---
 with st.sidebar:
     st.title("🌿 IP-SAKTI Sahayak")
     st.caption("SIH AI Research Prototype")
     
     st.divider()
+    # API Key Input Box in Sidebar
+    api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Paste your Gemini API key here for live AI generation.")
+    
+    # Clear / Delete Chat Button
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
@@ -131,8 +129,10 @@ if prompt_to_process:
             
             answer_text = ""
             
-            if API_KEY:
+            # Use Gemini AI if API Key is entered in the sidebar box
+            if api_key:
                 try:
+                    genai.configure(api_key=api_key)
                     model = genai.GenerativeModel("gemini-1.5-flash")
                     prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant for SIH. Answer this query professionally focusing on {market} and {mode}: {prompt_to_process}"
                     response = model.generate_content(prompt_full)
@@ -140,11 +140,12 @@ if prompt_to_process:
                 except Exception as e:
                     answer_text = f"Error using API Key: {e}"
             
-            if not API_KEY or not answer_text:
+            # Fallback if no API key is provided
+            if not api_key or not answer_text:
                 if st.session_state.language == "hi":
-                    answer_text = f"आपके प्रश्न '{prompt_to_process}' के संदर्भ में, प्रणाली ने पारंपरिक ज्ञान (TKDL) और {market} के पेटेंट नियमों के तहत विश्लेषण किया है।"
+                    answer_text = f"आपके प्रश्न '{prompt_to_process}' के संदर्भ में, प्रणाली ने पारंपरिक ज्ञान (TKDL) और {market} के पेटेंट नियमों के तहत विश्लेषण किया है। (Live AI के लिए कृपया sidebar में API Key दर्ज करें)"
                 else:
-                    answer_text = f"Regarding your query on '{prompt_to_process}', the system analyzed traditional knowledge digital libraries (TKDL) and patent regulations for {market}."
+                    answer_text = f"Regarding your query on '{prompt_to_process}', the system analyzed traditional knowledge digital libraries (TKDL) and patent regulations for {market}. (Please enter your API Key in the sidebar for live AI responses)"
 
             response_data = {
                 "answer": answer_text,
