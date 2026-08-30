@@ -131,20 +131,34 @@ if prompt_to_process:
                     genai.configure(api_key=api_key)
                     prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant for SIH. Answer this query professionally focusing on {market} and {mode}: {prompt_to_process}"
                     
-                    # Safe fallback mechanism to test standard model names
                     success = False
-                    for model_name in ["gemini-1.5-flash", "gemini-pro"]:
-                        try:
-                            model = genai.GenerativeModel(model_name)
-                            response = model.generate_content(prompt_full)
-                            answer_text = response.text
-                            success = True
-                            break
-                        except Exception:
-                            continue
                     
+                    # Automatic model discovery based on API key permissions
+                    try:
+                        for m in genai.list_models():
+                            if 'generateContent' in m.supported_generation_methods:
+                                model = genai.GenerativeModel(m.name)
+                                response = model.generate_content(prompt_full)
+                                answer_text = response.text
+                                success = True
+                                break
+                    except Exception:
+                        pass
+                    
+                    # Fallback standard model names if list_models fails
                     if not success:
-                        answer_text = "Error: Could not connect to available Gemini models. Please check your API key."
+                        for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
+                            try:
+                                model = genai.GenerativeModel(model_name)
+                                response = model.generate_content(prompt_full)
+                                answer_text = response.text
+                                success = True
+                                break
+                            except Exception:
+                                continue
+                    
+                    if not success or not answer_text:
+                        answer_text = "Error: Could not connect to available Gemini models. Please check if your API key is correct and active."
                         
                 except Exception as e:
                     answer_text = f"Error using API Key: {e}"
