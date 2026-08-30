@@ -133,9 +133,9 @@ if prompt_to_process:
                     genai.configure(api_key=api_key)
                     system_instruction = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
-                    # Updated model name matching the latest recommended version
+                    # Using gemini-2.5-flash which is standard, or falls back properly using generative client
                     model = genai.GenerativeModel(
-                        model_name="gemini-3.6-flash",
+                        model_name="gemini-2.5-flash",
                         system_instruction=system_instruction
                     )
                     
@@ -146,7 +146,16 @@ if prompt_to_process:
                     else:
                         answer_text = "Error: Received empty response from Gemini."
                 except Exception as e:
-                    answer_text = f"❌ Gemini API Connection Error: {e}"
+                    # Fallback helper if model name causes version mismatch
+                    try:
+                        model = genai.GenerativeModel(
+                            model_name="gemini-1.5-flash",
+                            system_instruction=system_instruction
+                        )
+                        response = model.generate_content(prompt_to_process)
+                        answer_text = response.text if response and response.text else "Error: Received empty response."
+                    except Exception as fallback_e:
+                        answer_text = f"❌ Gemini API Connection Error: {e}"
 
             response_data = {
                 "answer": answer_text,
