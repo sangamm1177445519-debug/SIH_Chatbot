@@ -6,11 +6,10 @@ import google.generativeai as genai
 st.set_page_config(page_title="IP-SAKTI Sahayak", page_icon="🌿", layout="wide")
 
 # --- HARDCODED API KEY ---
-# Apni Gemini API key yahan 'YOUR_API_KEY_HERE' ki jagah quotes ke andar paste kar dein
 API_KEY = "AQ.Ab8RN6LoVvkX800k2aPZ2JbINFH-vVUcYh4fvCmYJV-kjZKWFQ"
 
-if API_KEY and API_KEY != "AQ.Ab8RN6LoVvkX800k2aPZ2JbINFH-vVUcYh4fvCmYJV-kjZKWFQ":
-    genai.configure(api_key=AQ.Ab8RN6LoVvkX800k2aPZ2JbINFH-vVUcYh4fvCmYJV-kjZKWFQ)
+if API_KEY:
+    genai.configure(api_key=API_KEY)
 
 # --- CUSTOM CSS FOR PREMIUM LOOK ---
 st.markdown("""
@@ -35,7 +34,6 @@ with st.sidebar:
     st.caption("SIH AI Research Prototype")
     
     st.divider()
-    # Clear / Delete Chat Button
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
@@ -133,8 +131,7 @@ if prompt_to_process:
             
             answer_text = ""
             
-            # Use Gemini AI if API key is configured
-            if API_KEY and API_KEY != "YOUR_API_KEY_HERE":
+            if API_KEY:
                 try:
                     model = genai.GenerativeModel("gemini-1.5-flash")
                     prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant for SIH. Answer this query professionally focusing on {market} and {mode}: {prompt_to_process}"
@@ -143,12 +140,11 @@ if prompt_to_process:
                 except Exception as e:
                     answer_text = f"Error using API Key: {e}"
             
-            # Fallback if API key is missing or invalid
-            if not API_KEY or API_KEY == "YOUR_API_KEY_HERE" or not answer_text:
+            if not API_KEY or not answer_text:
                 if st.session_state.language == "hi":
-                    answer_text = f"आपके प्रश्न '{prompt_to_process}' के संदर्भ में, प्रणाली ने पारंपरिक ज्ञान (TKDL) और {market} के पेटेंट नियमों के तहत विश्लेषण किया है। पारंपरिक फॉर्मूलेशन को पेटेंट योग्य बनाने के लिए विशिष्ट सहक्रियात्मक (synergistic) डेटा देना अनिवार्य है।"
+                    answer_text = f"आपके प्रश्न '{prompt_to_process}' के संदर्भ में, प्रणाली ने पारंपरिक ज्ञान (TKDL) और {market} के पेटेंट नियमों के तहत विश्लेषण किया है।"
                 else:
-                    answer_text = f"Regarding your query on '{prompt_to_process}', the system analyzed traditional knowledge digital libraries (TKDL) and patent regulations for {market}. Under current frameworks, traditional formulations require distinct non-obvious improvements or synergistic parameters."
+                    answer_text = f"Regarding your query on '{prompt_to_process}', the system analyzed traditional knowledge digital libraries (TKDL) and patent regulations for {market}."
 
             response_data = {
                 "answer": answer_text,
