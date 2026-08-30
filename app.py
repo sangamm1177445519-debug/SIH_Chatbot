@@ -28,10 +28,8 @@ with st.sidebar:
     st.caption("SIH AI Research Prototype")
     
     st.divider()
-    # API Key Input Box in Sidebar
     api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Paste your Gemini API key here for live AI generation.")
     
-    # Clear / Delete Chat Button
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
@@ -129,18 +127,24 @@ if prompt_to_process:
             
             answer_text = ""
             
-            # Use Gemini AI if API Key is entered in the sidebar box
             if api_key:
                 try:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel("gemini-1.5-flash")
                     prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant for SIH. Answer this query professionally focusing on {market} and {mode}: {prompt_to_process}"
-                    response = model.generate_content(prompt_full)
-                    answer_text = response.text
+                    
+                    # Try primary model, fallback if it fails
+                    try:
+                        model = genai.GenerativeModel("gemini-1.5-flash")
+                        response = model.generate_content(prompt_full)
+                        answer_text = response.text
+                    except Exception:
+                        model = genai.GenerativeModel("gemini-pro")
+                        response = model.generate_content(prompt_full)
+                        answer_text = response.text
+                        
                 except Exception as e:
                     answer_text = f"Error using API Key: {e}"
             
-            # Fallback if no API key is provided
             if not api_key or not answer_text:
                 if st.session_state.language == "hi":
                     answer_text = f"आपके प्रश्न '{prompt_to_process}' के संदर्भ में, प्रणाली ने पारंपरिक ज्ञान (TKDL) और {market} के पेटेंट नियमों के तहत विश्लेषण किया है। (Live AI के लिए कृपया sidebar में API Key दर्ज करें)"
