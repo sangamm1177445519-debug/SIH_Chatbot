@@ -1,8 +1,8 @@
 import streamlit as st
 from google import genai
 
-# --- API CONFIGURATION ---
-API_KEY = "AQ.Ab8RN6LjvFvWPfCYNZel28Wr9mgrk0imIauUa6bcln16TO5Tww"
+# --- API CONFIGURATION (Securely loaded from Streamlit Secrets) ---
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="IP-SAKTI Sahayak (Gemini)", page_icon="🌿", layout="wide")
