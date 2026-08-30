@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from openai import OpenAI
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="IP-SAKTI Sahayak", page_icon="🌿", layout="wide")
@@ -27,7 +27,8 @@ with st.sidebar:
     st.caption("SIH AI Research Prototype")
     
     st.divider()
-    api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Paste your Gemini API key here for live AI generation.")
+    # Updated label for OpenAI Key
+    api_key = st.text_input("Enter OpenAI API Key", type="password", help="Paste your OpenAI API key here (e.g., sk-...)")
     
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
@@ -122,36 +123,37 @@ if prompt_to_process:
         st.markdown(prompt_to_process)
 
     with st.chat_message("assistant"):
-        with st.spinner("Analyzing legal databases & querying AI engine..."):
+        with st.spinner("Connecting to OpenAI & analyzing legal databases..."):
             
             answer_text = ""
             success = False
             
             if api_key:
                 try:
-                    genai.configure(api_key=api_key)
-                    prompt_full = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a structured legal brief for {market} regarding: {prompt_to_process}"
+                    client = OpenAI(api_key=api_key)
+                    system_prompt = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a structured, professional legal brief for {market} focusing on {mode}."
                     
-                    # Try calling available models safely
-                    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
-                        try:
-                            model = genai.GenerativeModel(model_name)
-                            response = model.generate_content(prompt_full)
-                            if response and response.text:
-                                answer_text = response.text
-                                success = True
-                                break
-                        except Exception:
-                            continue
-                except Exception:
-                    pass
+                    response = client.chat.completions.create(
+                        model="gpt-4o-mini", # Fast and reliable OpenAI model
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt_to_process}
+                        ],
+                        temperature=0.3
+                    )
+                    
+                    if response and response.choices[0].message.content:
+                        answer_text = response.choices[0].message.content
+                        success = True
+                except Exception as e:
+                    answer_text = f"Error using OpenAI API Key: {e}"
 
-            # Safe Fallback to ensure app never breaks during evaluation/demo
-            if not success:
+            # Fallback if API key is missing or encounters any error
+            if not success and not api_key:
                 if st.session_state.language == "hi":
-                    answer_text = f"**आयुर्वेदिक आईपी विश्लेषण ({market}):**\n\nआपके प्रश्न *'{prompt_to_process}'* के संबंध में, पारंपरिक ज्ञान डिजिटल लाइब्रेरी (TKDL) और पेटेंट डेटाबेस की जांच की गई है।\n\n1. **संरक्षण:** पारंपरिक फॉर्मूलेशन को बायो-पाइरेसी से बचाने के लिए TKDL डेटाबेस में प्रायोर आर्ट के रूप में दर्ज किया जाना चाहिए।\n2. **दावे (Claims):** पॉलीहर्बल कॉम्बिनेशन के लिए नवीनता (Novelty) और गैर-स्पष्टता (Non-obviousness) के मानदंडों को पूरा करना आवश्यक है।\n3. **अनुपालन:** {market} बाजार में वाणिज्यिक विस्तार के लिए स्थानीय हर्बल विनियामक मानकों का पालन अनिवार्य है।"
+                    answer_text = f"**आयुर्वेदिक आईपी विश्लेषण ({market}):**\n\nआपके प्रश्न *'{prompt_to_process}'* के संबंध में, पारंपरिक ज्ञान डिजिटल लाइब्रेरी (TKDL) और पेटेंट डेटाबेस का विश्लेषण किया गया है। (Live AI के लिए कृपया sidebar में OpenAI API Key दर्ज करें)"
                 else:
-                    answer_text = f"**Ayurvedic IP & Regulatory Brief for {market}:**\n\nIn response to your query regarding *'{prompt_to_process}'*, the system evaluated traditional knowledge frameworks and prior art guidelines:\n\n1. **Prior Art Protection:** Formulation data is cross-referenced against the Traditional Knowledge Digital Library (TKDL) to prevent misappropriation and wrongful patenting.\n2. **Patentability Criteria:** Polyherbal synergies must demonstrate established novelty, inventive step, and industrial applicability under {market} patent laws.\n3. **Regulatory Compliance:** Commercial scaling requires adhering to standard herbal extracts certification and documentation protocols."
+                    answer_text = f"**Ayurvedic IP & Regulatory Brief for {market}:**\n\nIn response to your query regarding *'{prompt_to_process}'*, the system evaluated traditional knowledge frameworks and prior art guidelines. (Please enter your OpenAI API Key in the sidebar for live AI responses)"
 
             response_data = {
                 "answer": answer_text,
