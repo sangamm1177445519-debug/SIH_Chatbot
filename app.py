@@ -1,8 +1,8 @@
 import streamlit as st
-from openai import OpenAI
+import google.generativeai as genai
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="IP-SAKTI Sahayak (OpenRouter)", page_icon="🌿", layout="wide")
+st.set_page_config(page_title="IP-SAKTI Sahayak (Gemini)", page_icon="🌿", layout="wide")
 
 # --- CUSTOM CSS ---
 st.markdown("""
@@ -24,10 +24,10 @@ if "language" not in st.session_state:
 # --- SIDEBAR API CONFIG & CONTROLS ---
 with st.sidebar:
     st.title("🌿 IP-SAKTI Sahayak")
-    st.caption("Powered by OpenRouter")
+    st.caption("Powered by Gemini AI Studio")
     
     st.divider()
-    api_key = st.text_input("Enter OpenRouter API Key", type="password", help="Paste your OpenRouter API key (sk-or-...)")
+    api_key = st.text_input("Enter Gemini API Key", type="password", help="Paste your Google AI Studio API key (AIzaSy...)")
     
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
@@ -122,35 +122,30 @@ if prompt_to_process:
         st.markdown(prompt_to_process)
 
     with st.chat_message("assistant"):
-        with st.spinner("Connecting to OpenRouter & generating live response..."):
+        with st.spinner("Connecting to Gemini AI Studio & generating response..."):
             
             answer_text = ""
             
             if not api_key:
-                answer_text = "⚠️ Please enter your OpenRouter API key in the sidebar to get live responses."
+                answer_text = "⚠️ Please enter your Gemini API key in the sidebar to get live responses."
             else:
                 try:
-                    client = OpenAI(
-                        base_url="https://openrouter.ai/api/v1",
-                        api_key=api_key,
-                    )
-                    system_msg = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
+                    genai.configure(api_key=api_key)
+                    system_instruction = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
-                    response = client.chat.completions.create(
-                        model="openrouter/auto",
-                        messages=[
-                            {"role": "system", "content": system_msg},
-                            {"role": "user", "content": prompt_to_process}
-                        ],
-                        temperature=0.3
+                    model = genai.GenerativeModel(
+                        model_name="gemini-1.5-flash",
+                        system_instruction=system_instruction
                     )
                     
-                    if response and response.choices:
-                        answer_text = response.choices[0].message.content
+                    response = model.generate_content(prompt_to_process)
+                    
+                    if response and response.text:
+                        answer_text = response.text
                     else:
-                        answer_text = "Error: Received empty response from OpenRouter."
+                        answer_text = "Error: Received empty response from Gemini."
                 except Exception as e:
-                    answer_text = f"❌ OpenRouter API Connection Error: {e}"
+                    answer_text = f"❌ Gemini API Connection Error: {e}"
 
             response_data = {
                 "answer": answer_text,
