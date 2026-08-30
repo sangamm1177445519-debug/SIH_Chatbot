@@ -1,6 +1,9 @@
 import streamlit as st
 from google import genai
 
+# --- API CONFIGURATION ---
+API_KEY = "AQ.Ab8RN6LjvFvWPfCYNZel28Wr9mgrk0imIauUa6bcln16TO5Tww"
+
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="IP-SAKTI Sahayak (Gemini)", page_icon="🌿", layout="wide")
 
@@ -21,14 +24,12 @@ if "messages" not in st.session_state:
 if "language" not in st.session_state:
     st.session_state.language = "en"
 
-# --- SIDEBAR API CONFIG & CONTROLS ---
+# --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.title("🌿 IP-SAKTI Sahayak")
     st.caption("Powered by Google GenAI SDK")
     
     st.divider()
-    api_key = st.text_input("Enter Gemini API Key", type="password", help="Paste your Google AI Studio API key (AIzaSy...)")
-    
     if st.button("🗑️ Clear / Delete Chat", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
@@ -126,28 +127,24 @@ if prompt_to_process:
             
             answer_text = ""
             
-            if not api_key:
-                answer_text = "⚠️ Please enter your Gemini API key in the sidebar to get live responses."
-            else:
-                try:
-                    # Using the new Google GenAI client SDK
-                    client = genai.Client(api_key=api_key)
-                    system_instruction = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
-                    
-                    response = client.models.generate_content(
-                        model='gemini-2.5-flash',
-                        contents=prompt_to_process,
-                        config={
-                            'system_instruction': system_instruction
-                        }
-                    )
-                    
-                    if response and response.text:
-                        answer_text = response.text
-                    else:
-                        answer_text = "Error: Received empty response from Gemini."
-                except Exception as e:
-                    answer_text = f"❌ Gemini API Connection Error: {e}"
+            try:
+                client = genai.Client(api_key=API_KEY)
+                system_instruction = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
+                
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt_to_process,
+                    config={
+                        'system_instruction': system_instruction
+                    }
+                )
+                
+                if response and response.text:
+                    answer_text = response.text
+                else:
+                    answer_text = "Error: Received empty response from Gemini."
+            except Exception as e:
+                answer_text = f"❌ Gemini API Connection Error: {e}"
 
             response_data = {
                 "answer": answer_text,
