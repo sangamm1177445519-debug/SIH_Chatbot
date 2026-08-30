@@ -133,9 +133,19 @@ if prompt_to_process:
                     genai.configure(api_key=api_key)
                     system_instruction = f"You are an expert Ayurvedic IP and Regulatory legal assistant. Provide a professional and structured response for {market} focusing on {mode} in {'Hindi' if st.session_state.language == 'hi' else 'English'}."
                     
-                    # Stable model configuration that works out of the box
+                    # Automatically find an active model supporting text generation
+                    available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                    
+                    selected_model = "gemini-1.5-flash"
+                    for model_name in available_models:
+                        if "flash" in model_name:
+                            selected_model = model_name
+                            break
+                    elif available_models:
+                        selected_model = available_models[0]
+                    
                     model = genai.GenerativeModel(
-                        model_name="gemini-1.5-flash",
+                        model_name=selected_model,
                         system_instruction=system_instruction
                     )
                     
