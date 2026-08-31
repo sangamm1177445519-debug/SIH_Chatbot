@@ -123,7 +123,7 @@ if prompt_to_process:
         st.markdown(prompt_to_process)
 
     with st.chat_message("assistant"):
-        with st.spinner("Connecting to Gemini AI Studio & generating response..."):
+        with st.spinner("Generating response..."):
             
             answer_text = ""
             
